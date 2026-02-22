@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 
     const token_t *token_arr = lex(input);
 
-    printf("%s", input);
+    printf("%s\n", input);
 
     print(token_arr);
 
@@ -77,6 +77,13 @@ const token_t *lex(const char *input) {
             }
             if (!matched) {
                 *token_arr++ = VAR;
+
+                size_t len_tail = 0;
+                while (isalpha(input[len_tail + 1])) {
+                    ++len_tail;
+                }
+
+                step_size += len_tail;
             }
         } else if (isdigit(*input)) {
             *token_arr++ = INT;
