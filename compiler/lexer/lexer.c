@@ -5,13 +5,13 @@
 
 #include "token_def.h"
 
-const char *buffer_in_mem(FILE *in);
-
 const token_t *lex(const char *input);
 bool starts_with(const char *input, const char *prefix);
 
 void print(const token_t *token_arr);
 void pretty_print(const token_t *token_arr);
+
+const char *buffer_in_mem(FILE *in);
 
 int main(int argc, char **argv) {
 
