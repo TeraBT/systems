@@ -1,3 +1,7 @@
 nasm -f bin boot.asm -o boot.bin
 
 qemu-system-i386 -fda boot.bin
+qemu-system-i386 -drive format=raw,file=boot.bin
+
+cat boot.bin stage2.bin > os.img
+qemu-system-i386 -drive format=raw,file=os.img
