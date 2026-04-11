@@ -5,3 +5,6 @@ qemu-system-i386 -drive format=raw,file=boot.bin
 
 cat boot.bin stage2.bin > os.img
 qemu-system-i386 -drive format=raw,file=os.img
+
+For CHS in stage2.asm:
+qemu-system-i386 -drive if=floppy,format=raw,file=os.img

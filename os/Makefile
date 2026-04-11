@@ -1,4 +1,11 @@
 NASM = nasm
+CC = gcc
+LD = ld
+OBJCOPY = objcopy
+
+CFLAGS = -m32 -ffreestanding -fno-pic -fno-pie -nostdlib -nostartfiles -nodefaultlibs -c
+# CERRORFLAGS = -Werror -Wall -Wextra -Wpedantic
+LDFLAGS = -m elf_i386 -T linker.ld
 
 all: os.img
 
@@ -8,10 +15,25 @@ boot.bin: boot.asm bootloader_utils.asm
 stage2.bin: stage2.asm bootloader_utils.asm
 	$(NASM) -f bin stage2.asm -o stage2.bin
 
-os.img: boot.bin stage2.bin
-	cat boot.bin stage2.bin > os.img
+kernel_entry.o: kernel_entry.asm
+	$(NASM) -f elf32 kernel_entry.asm -o kernel_entry.o
+
+kutils.o: kutils.c kutils.h
+	$(CC) $(CFLAGS) $(CERRORFLAGS) kutils.c -o kutils.o
+
+kmain.o: kmain.c kutils.h
+	$(CC) $(CFLAGS) $(CERRORFLAGS) kmain.c -o kmain.o
+
+kernel.elf: kernel_entry.o kmain.o kutils.o linker.ld
+	$(LD) $(LDFLAGS) kernel_entry.o kmain.o kutils.o -o kernel.elf
+
+kernel.bin: kernel.elf
+	$(OBJCOPY) -O binary kernel.elf kernel.bin
+
+os.img: boot.bin stage2.bin kernel.bin
+	cat boot.bin stage2.bin kernel.bin > os.img
 
 clean:
-	rm -f boot.bin stage2.bin os.img
+	rm -f *.bin *.o *.elf *.img
 
 .PHONY: all clean

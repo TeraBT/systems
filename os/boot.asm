@@ -7,37 +7,39 @@ start:
     mov ds, ax
     mov es, ax
     mov ss, ax
-    mov sp, 0x7C00
+    mov sp, 0x7c00
     sti
 
     mov [boot_drive], dl
 
-    mov si, initial_message
+    mov si, init_msg
     call print_bios
 
-    call load_stage2
+    call load_stage2_into_mem
 
 .hang:
     cli
     hlt
     jmp .hang
 
-load_stage2:
+load_stage2_into_mem:
     mov ah, 0x02
     mov al, 0x01
     mov ch, 0x00
     mov cl, 0x02
     mov dh, 0x00
     mov dl, [boot_drive]
-    mov bx, 0x7E00
+    mov bx, 0x7e00
     int 0x13
     
-    jc .handle_error
+    jc .load_error
 
-    jmp 0x0000:0x7E00
+    mov dl, [boot_drive]
 
-.handle_error:
-    mov si, error_message
+    jmp 0x0000:0x7e00
+
+.load_error:
+    mov si, stage2_load_error_msg
     call print_bios
     ret
 
@@ -45,10 +47,10 @@ load_stage2:
 
 boot_drive: db 0
 
-initial_message:
-    db 'Bootloader loaded. Loading stage 2...', 13, 10, 0
+init_msg:
+    db 'Bootloader loaded.', 13, 10, 0
 
-error_message: db 'Error occurred.', 13, 10, 0
+stage2_load_error_msg: db 'Error: Stage 2 not loaded into memory.', 13, 10, 0
 
 times 510 - ($ - $$) db 0
 dw 0xaa55
