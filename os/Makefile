@@ -4,10 +4,10 @@ LD = ld
 OBJCOPY = objcopy
 
 CFLAGS = -m32 -ffreestanding -fno-pic -fno-pie -nostdlib -nostartfiles -nodefaultlibs -c
-# CERRORFLAGS = -Werror -Wall -Wextra -Wpedantic
+CERRORFLAGS = -Wall -Wextra -Wpedantic
 LDFLAGS = -m elf_i386 -T linker.ld
 
-all: os.img
+all: os.img format
 
 boot.bin: boot.asm bootloader_utils.asm
 	$(NASM) -f bin boot.asm -o boot.bin
@@ -18,10 +18,10 @@ stage2.bin: stage2.asm bootloader_utils.asm
 kernel_entry.o: kernel_entry.asm
 	$(NASM) -f elf32 kernel_entry.asm -o kernel_entry.o
 
-kutils.o: kutils.c kutils.h
+kutils.o: kutils.c kutils.h kstdint.h
 	$(CC) $(CFLAGS) $(CERRORFLAGS) kutils.c -o kutils.o
 
-kmain.o: kmain.c kutils.h
+kmain.o: kmain.c kutils.h kstdint.h
 	$(CC) $(CFLAGS) $(CERRORFLAGS) kmain.c -o kmain.o
 
 kernel.elf: kernel_entry.o kmain.o kutils.o linker.ld
@@ -36,4 +36,10 @@ os.img: boot.bin stage2.bin kernel.bin
 clean:
 	rm -f *.bin *.o *.elf *.img
 
-.PHONY: all clean
+format:
+	clang-format -i *.c *.h
+
+run: all
+	qemu-system-i386 -drive format=raw,file=os.img
+
+.PHONY: all clean format run

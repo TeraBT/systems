@@ -87,7 +87,7 @@ stage2_init_msg:
 dap:
     db 0x10
     db 0x00
-    dw 0x0001
+    dw 0x0002
     dw 0x0000
     dw 0x1000
     dq 0x0000000000000002
