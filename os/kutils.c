@@ -2,6 +2,36 @@
 #include "kstdint.h"
 
 //////////////////////////////
+////    Memory utils
+//////////////////////////////
+
+void *memcpy(void *dest, const void *src, size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    ((uint8_t *)dest)[i] = ((const uint8_t *)src)[i];
+  }
+
+  return dest;
+}
+
+void *memset(void *dest, int value, size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    ((uint8_t *)dest)[i] = (uint8_t)value;
+  }
+
+  return dest;
+}
+
+int memcmp(const void *a, const void *b, size_t n) {
+  for (size_t i = 0; i < n; i++) {
+    if (((uint8_t *)a)[i] != ((uint8_t *)b)[i]) {
+      return (int)((const uint8_t *)a)[i] - (int)((const uint8_t *)b)[i];
+    }
+  }
+
+  return 0;
+}
+
+//////////////////////////////
 ////    Generic utils
 //////////////////////////////
 
@@ -9,6 +39,19 @@ void delay(uint64_t count) {
   while (count--) {
     __asm__ volatile("nop");
   }
+}
+
+size_t strlen(const char *s) {
+  size_t l = 0;
+  while (s[l] != '\0') {
+    ++l;
+  }
+
+  return l;
+}
+
+char *itoa(int value, char *str, int base) {
+  // TODO
 }
 
 //////////////////////////////
@@ -24,8 +67,8 @@ enum {
 };
 
 typedef struct VGA {
-  uint16_t row;
-  uint16_t col;
+  size_t row;
+  size_t col;
   uint8_t color;
   volatile uint16_t *buffer;
 } VGA;
@@ -68,7 +111,7 @@ void vga_setcolor(uint8_t f_color, uint8_t b_color) {
   vga.color = (b_color << 4) | f_color;
 }
 
-void vga_setpos(uint16_t row, uint16_t col) {
+void vga_setpos(size_t row, size_t col) {
   vga.row = row;
   vga.col = col;
 }
