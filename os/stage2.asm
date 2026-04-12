@@ -1,3 +1,5 @@
+%define KERNEL_SECTOR_COUNT 0x0003
+
 bits 16
 org 0x7e00
 
@@ -87,7 +89,7 @@ stage2_init_msg:
 dap:
     db 0x10
     db 0x00
-    dw 0x0002
+    dw KERNEL_SECTOR_COUNT
     dw 0x0000
     dw 0x1000
     dq 0x0000000000000002

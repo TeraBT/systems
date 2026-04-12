@@ -50,8 +50,34 @@ size_t strlen(const char *s) {
   return l;
 }
 
+void reverse(char *s);
+
+/* Based on K&R */
 char *itoa(int value, char *str, int base) {
   // TODO
+  int i, sign;
+
+  if ((sign = value) < 0)
+    value = -value;
+  i = 0;
+  do {
+    str[i++] = value % base + '0';
+  } while ((value /= base) > 0);
+  if (sign < 0)
+    str[i++] = '-';
+  str[i] = '\0';
+  reverse(str);
+}
+
+void reverse(char *s) {
+  int i, j;
+  char c;
+
+  for (i = 0, j = strlen(s) - 1; i < j; i++, j--) {
+    c = s[i];
+    s[i] = s[j];
+    s[j] = c;
+  }
 }
 
 //////////////////////////////

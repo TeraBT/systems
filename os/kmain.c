@@ -7,9 +7,13 @@ void kmain(void) {
 
   vga_write("Kernel init successful.");
 
-  delay(100000000ULL);
+  vga_setpos(2, 0);
 
-  init_vga(VGA_GREEN, VGA_BLACK);
+  vga_write("Utils test.");
 
-  vga_clear();
+  vga_write(strlen("123") == 3 ? "Y" : "N");
+
+  vga_setpos(4, 0);
+
+  vga_write("Alive counter: "); // TODO
 }
