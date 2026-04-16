@@ -52,21 +52,29 @@ size_t strlen(const char *s) {
 
 void reverse(char *s);
 
-/* Based on K&R */
-char *itoa(int value, char *str, int base) {
-  // TODO
+char *itoa(int value, char *s, int base) {
+  if (base != 10 && base != 16 && base != 8 && base != 2) {
+    return NULL;
+  }
+
   int i, sign;
 
-  if ((sign = value) < 0)
-    value = -value;
+  if (value < 0)
+    sign = -1;
+  else
+    sign = 1;
+
   i = 0;
   do {
-    str[i++] = value % base + '0';
-  } while ((value /= base) > 0);
+    uint8_t r = value % base * sign;
+    s[i++] = r + (r > 9 ? 'a' - 10 : '0');
+  } while ((value /= base) != 0);
   if (sign < 0)
-    str[i++] = '-';
-  str[i] = '\0';
-  reverse(str);
+    s[i++] = '-';
+  s[i] = '\0';
+  reverse(s);
+
+  return s;
 }
 
 void reverse(char *s) {
@@ -108,7 +116,7 @@ void init_vga(uint8_t f_color, uint8_t b_color) {
   vga.buffer = (volatile uint16_t *)0xb8000;
 }
 
-void vga_putchar(char c) {
+void vga_putc(char c) {
   vga.buffer[vga.row * VGA_WIDTH + vga.col++] = (vga.color << 8) | c;
 
   if (vga.col == VGA_WIDTH) {
@@ -122,10 +130,27 @@ void vga_putchar(char c) {
   }
 }
 
-void vga_write(const char *s) {
+void vga_puts(const char *s) {
   for (int i = 0; s[i] != '\0'; i++) {
-    vga_putchar(s[i]);
+    vga_putc(s[i]);
   }
+}
+
+void vga_newline();
+
+void vga_printf(const char *s) { // TODO
+  for (int i = 0; s[i] != '\0'; i++) {
+    if (s[i] == '\n') {
+      vga_newline();
+      continue;
+    }
+    vga_putc(s[i]);
+  }
+}
+
+void vga_println(const char *s) {
+  vga_puts(s);
+  vga_newline();
 }
 
 void vga_clear(void) {
@@ -140,4 +165,15 @@ void vga_setcolor(uint8_t f_color, uint8_t b_color) {
 void vga_setpos(size_t row, size_t col) {
   vga.row = row;
   vga.col = col;
+}
+
+void vga_setpos_offset(int row, int col) {
+
+  vga.row += row;
+  vga.col += col;
+}
+
+void vga_newline() {
+  vga.col = 0;
+  ++vga.row;
 }

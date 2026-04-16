@@ -17,4 +17,6 @@ typedef __INTPTR_TYPE__ intptr_t;
 typedef __UINTPTR_TYPE__ uintptr_t;
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 
+#define NULL ((void *)0)
+
 #endif

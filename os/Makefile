@@ -32,6 +32,11 @@ kernel.bin: kernel.elf
 
 os.img: boot.bin stage2.bin kernel.bin
 	cat boot.bin stage2.bin kernel.bin > os.img
+	current_size=$$(stat -c%s os.img); \
+	padded_size=$$(( ($$current_size + 511) / 512 * 512 )); \
+	truncate -s $$padded_size os.img; \
+	echo $$padded_size; \
+	echo "Kernel sector count: $$(( ($$padded_size - 1024 ) / 512 ))"
 
 clean:
 	rm -f *.bin *.o *.elf *.img
