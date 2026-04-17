@@ -1,6 +1,8 @@
 #include "kutils.h"
 #include "kstdint.h"
 
+#include <stdarg.h>
+
 //////////////////////////////
 ////    Memory utils
 //////////////////////////////
@@ -116,45 +118,8 @@ void init_vga(uint8_t f_color, uint8_t b_color) {
   vga.buffer = (volatile uint16_t *)0xb8000;
 }
 
-void vga_putc(char c) {
-  vga.buffer[vga.row * VGA_WIDTH + vga.col++] = (vga.color << 8) | c;
-
-  if (vga.col == VGA_WIDTH) {
-    vga.col = 0;
-
-    if (vga.row == VGA_HEIGHT - 1) {
-      vga.row = 0;
-    } else {
-      ++vga.row;
-    }
-  }
-}
-
-void vga_puts(const char *s) {
-  for (int i = 0; s[i] != '\0'; i++) {
-    vga_putc(s[i]);
-  }
-}
-
-void vga_newline();
-
-void vga_printf(const char *s) { // TODO
-  for (int i = 0; s[i] != '\0'; i++) {
-    if (s[i] == '\n') {
-      vga_newline();
-      continue;
-    }
-    vga_putc(s[i]);
-  }
-}
-
-void vga_println(const char *s) {
-  vga_puts(s);
-  vga_newline();
-}
-
 void vga_clear(void) {
-  for (int i = 0; i < VGA_TOTAL_CELL_COUNT; i++) {
+  for (int i = 0; i < VGA_TOTAL_CELL_COUNT; ++i) {
     vga.buffer[i] = 0x0000;
   }
 }
@@ -167,13 +132,120 @@ void vga_setpos(size_t row, size_t col) {
   vga.col = col;
 }
 
-void vga_setpos_offset(int row, int col) {
+void vga_setpos_rel(int row_steps, int col_steps) {
 
-  vga.row += row;
-  vga.col += col;
+  vga.row += row_steps;
+  vga.col += col_steps;
+}
+
+void vga_scroll(int line_count) {
+
+  if (line_count == 0)
+    return;
+
+  size_t row, col;
+
+  if (line_count > 0) {
+    while (line_count--) {
+      for (int i = 0; i < VGA_TOTAL_CELL_COUNT; ++i) {
+
+        row = i / VGA_WIDTH;
+        col = i % VGA_WIDTH;
+
+        if (row == VGA_HEIGHT - 1) {
+          vga.buffer[i] = (vga.color << 8) | 0x00;
+        } else {
+          vga.buffer[i] = vga.buffer[(row + 1) * VGA_WIDTH + col];
+        }
+      }
+
+      if (vga.row != 0) {
+        --vga.row;
+      } else {
+
+        vga.col = 0;
+      }
+    }
+  } else {
+    while (line_count++) {
+      for (int i = VGA_TOTAL_CELL_COUNT; i >= 0; --i) {
+
+        row = i / VGA_WIDTH;
+        col = i % VGA_WIDTH;
+
+        if (row == 0) {
+          vga.buffer[i] = (vga.color << 8) | 0x00;
+        } else {
+          vga.buffer[i] = vga.buffer[(row - 1) * VGA_WIDTH + col];
+        }
+      }
+
+      if (vga.row != VGA_HEIGHT - 1) {
+        ++vga.row;
+      } else {
+        vga.col = VGA_WIDTH - 1;
+      }
+    }
+  }
 }
 
 void vga_newline() {
   vga.col = 0;
+
+  if (vga.row == VGA_HEIGHT - 1) {
+    vga_scroll(1);
+  }
   ++vga.row;
+}
+
+void vga_putc(char c) {
+  if (c == '\n') {
+    vga_newline();
+    return;
+  }
+
+  vga.buffer[vga.row * VGA_WIDTH + vga.col++] = (vga.color << 8) | c;
+
+  if (vga.col == VGA_WIDTH) {
+    vga_newline();
+  }
+}
+
+void vga_puts(const char *s) {
+  while (*s) {
+    vga_putc(*s++);
+  }
+}
+
+void vga_newline();
+
+void vga_printf(const char *s, ...) {
+  va_list args;
+  va_start(args, s);
+
+  char buf[11];
+  while (*s) {
+
+    if (*s == '%') {
+
+      ++s;
+      switch (*s) {
+
+      case 'd':
+        itoa(va_arg(args, int), buf, 10);
+        vga_puts(buf);
+        break;
+
+      case 's':
+        vga_puts(va_arg(args, const char *));
+        break;
+      }
+    } else {
+      vga_putc(*s);
+    }
+
+    ++s;
+  }
+
+  va_end(args);
 }

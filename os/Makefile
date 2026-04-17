@@ -7,13 +7,17 @@ CFLAGS = -m32 -ffreestanding -fno-pic -fno-pie -nostdlib -nostartfiles -nodefaul
 CERRORFLAGS = -Wall -Wextra -Wpedantic
 LDFLAGS = -m elf_i386 -T linker.ld
 
+KERNEL_SECTOR_COUNT = $$(( ($$(stat -c%s kernel.bin) + 511) / 512 ))
+
 all: os.img format
 
 boot.bin: boot.asm bootloader_utils.asm
 	$(NASM) -f bin boot.asm -o boot.bin
 
-stage2.bin: stage2.asm bootloader_utils.asm
-	$(NASM) -f bin stage2.asm -o stage2.bin
+stage2.bin: stage2.asm bootloader_utils.asm kernel.bin
+	$(NASM) -f bin \
+	-DKERNEL_SECTOR_COUNT=$(KERNEL_SECTOR_COUNT) \
+	stage2.asm -o stage2.bin
 
 kernel_entry.o: kernel_entry.asm
 	$(NASM) -f elf32 kernel_entry.asm -o kernel_entry.o
@@ -35,8 +39,9 @@ os.img: boot.bin stage2.bin kernel.bin
 	current_size=$$(stat -c%s os.img); \
 	padded_size=$$(( ($$current_size + 511) / 512 * 512 )); \
 	truncate -s $$padded_size os.img; \
-	echo $$padded_size; \
-	echo "Kernel sector count: $$(( ($$padded_size - 1024 ) / 512 ))"
+	echo "Unpadded image size: $$current_size"; \
+	echo "Padded image size: $$padded_size"; \
+	echo "Kernel sector count: $(KERNEL_SECTOR_COUNT)"
 
 clean:
 	rm -f *.bin *.o *.elf *.img

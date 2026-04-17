@@ -9,24 +9,27 @@ void kmain(void) {
 
   vga_setpos(2, 0);
 
-  vga_printf("Utils test.\n");
+  vga_puts("Utils test:\n");
+  vga_newline();
 
   char c[128];
-  vga_printf("strlen(\"123\") = ");
-  vga_println(itoa(strlen("123"), c, 10));
+  vga_puts("strlen(\"123\") = ");
+  vga_printf("%s\n", itoa(strlen("123"), c, 10));
   vga_newline();
 
-  int n = -16;
-  vga_println(itoa(n, c, 10));
-  vga_println(itoa(n, c, 16));
-  vga_println(itoa(n, c, 2));
+  int n = 17;
+  vga_printf("%d = %s\n", n, itoa(n, c, 10));
+  vga_printf("%d = %s\n", n, itoa(n, c, 16));
+  vga_printf("%d = %s\n", n, itoa(n, c, 2));
   vga_newline();
 
-  vga_printf("Alive counter: ");
+  return;
+
+  vga_puts("Alive counter: ");
   for (int i = 0;; i++) {
     char *output = itoa(i, c, 10);
     vga_puts(output);
-    vga_setpos_offset(0, -strlen(output));
-    delay(100000000);
+    vga_setpos_rel(0, -strlen(output));
+    delay(100000000); // TODO: Make non-busy.
   }
 }

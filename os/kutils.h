@@ -3,6 +3,8 @@
 
 #include "kstdint.h"
 
+#include <stdarg.h>
+
 //////////////////////////////
 ////    Memory utils
 //////////////////////////////
@@ -32,14 +34,16 @@ enum VGA_COLORS {
 };
 
 void init_vga(uint8_t f_color, uint8_t b_color);
-void vga_putc(char c);
-void vga_puts(const char *s);
-void vga_printf(const char *s);
-void vga_println(const char *s);
+
 void vga_clear(void);
 void vga_setcolor(uint8_t f_color, uint8_t b_color);
 void vga_setpos(size_t row, size_t col);
-void vga_setpos_offset(int row, int col);
+void vga_setpos_rel(int row_steps, int col_steps);
+void vga_scroll(int line_count);
 void vga_newline();
+
+void vga_putc(char c);
+void vga_puts(const char *s);
+void vga_printf(const char *s, ...);
 
 #endif

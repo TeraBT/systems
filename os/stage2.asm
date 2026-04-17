@@ -1,4 +1,6 @@
-%define KERNEL_SECTOR_COUNT 0x0005
+%ifndef KERNEL_SECTOR_COUNT
+%define KERNEL_SECTOR_COUNT 0x0000
+%endif
 
 bits 16
 org 0x7e00
