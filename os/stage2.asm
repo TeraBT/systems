@@ -27,18 +27,6 @@ start2:
     jmp 0x08:protected_mode_entry
 
 load_kernel_into_mem:
-    ; mov ax, 0x1000
-    ; mov es, ax
-
-    ; mov ah, 0x02
-    ; mov al, 0x01
-    ; mov ch, 0x00
-    ; mov cl, 0x03
-    ; mov dh, 0x00
-    ; mov dl, [boot_drive]
-    ; mov bx, 0x0000
-    ; int 0x13
-
     mov si, dap
     mov ah, 0x42
     mov dl, [boot_drive]
@@ -48,11 +36,7 @@ load_kernel_into_mem:
     mov ax, 0x1000
     mov es, ax
     mov bx, 0x0000
-    cmp byte es:[bx + 2], 'H'
-    jne .kernel_bad_error
-    cmp byte es:[bx + 3], 'R'
-    jne .kernel_bad_error
-    cmp byte es:[bx + 4], 'T'
+    cmp dword es:[bx + 2], 'HRTL'
     jne .kernel_bad_error
 
     mov si, kernel_good_msg

@@ -5,7 +5,7 @@ extern kmain
 
 kernel_entry:
     jmp short next
-    kernel_sig: db 'H', 'R', 'T', 0
+    kernel_sig: db 'HRTL', 0
 
 next:
     cld

@@ -1,4 +1,5 @@
 #include "kutils.h"
+#include "kstddef.h"
 #include "kstdint.h"
 
 #include <stdarg.h>
@@ -37,7 +38,7 @@ int memcmp(const void *a, const void *b, size_t n) {
 ////    Generic utils
 //////////////////////////////
 
-void delay(uint64_t count) {
+void busy_delay(uint64_t count) {
   while (count--) {
     __asm__ volatile("nop");
   }
@@ -88,6 +89,54 @@ void reverse(char *s) {
     s[i] = s[j];
     s[j] = c;
   }
+}
+
+void panic(const char *msg) { vga_puts(msg); }
+
+//////////////////////////////
+////    Time utils
+//////////////////////////////
+
+static volatile uint32_t tick_count = 0;
+static uint32_t pit_frequency = 0;
+
+void init_pit(uint32_t frequency) {
+  if (frequency == 0) {
+    return;
+  }
+  pit_frequency = frequency;
+
+  uint16_t divisor = PIT_BASE_FREQUENCY / pit_frequency;
+
+  outb(PIT_COMMAND, 0x36);
+  outb(PIT_CHANNEL0, (uint8_t)(divisor & 0xff));
+  outb(PIT_CHANNEL0, (uint8_t)((divisor >> 8) & 0xff));
+}
+
+void pit_increment(void) { ++tick_count; }
+
+uint32_t pit_get_ticks(void) { return tick_count; }
+
+uint32_t pit_get_secs(void) { return pit_get_ticks() / pit_frequency; }
+
+void sleep(uint32_t ticks) {
+  uint32_t start = pit_get_ticks();
+  while ((pit_get_ticks() - start) < ticks) {
+    hlt();
+  }
+}
+
+void sleep_ms(uint32_t ms) { sleep((ms * pit_frequency + 9999) / 1000); }
+
+//////////////////////////////
+////    IO utils
+//////////////////////////////
+
+void pic_write_eoi(uint32_t int_no) {
+  if (int_no >= 40) {
+    outb(PIC2_COMMAND, 0x20);
+  }
+  outb(PIC1_COMMAND, 0x20);
 }
 
 //////////////////////////////

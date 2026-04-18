@@ -1,35 +1,47 @@
+#include "idt.h"
 #include "kutils.h"
 
-void kmain(void) {
+#define PIT_FREQUENCY 100
 
+void kmain(void) {
   init_vga(VGA_GREEN, VGA_BLACK);
   vga_clear();
 
-  vga_puts("Kernel init successful.");
-
+  vga_puts("Kernel main routine entered.");
   vga_setpos(2, 0);
 
-  vga_puts("Utils test:\n");
-  vga_newline();
+  vga_setcolor(VGA_LIGHT_GREY, VGA_BLACK);
+  vga_puts("Initializing IDT and interrupt handling...\n");
+  init_idt();
 
-  char c[128];
-  vga_puts("strlen(\"123\") = ");
-  vga_printf("%s\n", itoa(strlen("123"), c, 10));
-  vga_newline();
+  vga_puts("Remapping hardware interrupts...\n");
+  remap_pic();
 
-  int n = 17;
-  vga_printf("%d = %s\n", n, itoa(n, c, 10));
-  vga_printf("%d = %s\n", n, itoa(n, c, 16));
-  vga_printf("%d = %s\n", n, itoa(n, c, 2));
-  vga_newline();
+  vga_puts("Initializing interrupt timer...\n");
+  init_pit(PIT_FREQUENCY);
 
-  return;
+  sti();
+  vga_puts("Hardware interrupts re-enabled.\n");
 
-  vga_puts("Alive counter: ");
-  for (int i = 0;; i++) {
-    char *output = itoa(i, c, 10);
-    vga_puts(output);
-    vga_setpos_rel(0, -strlen(output));
-    delay(100000000); // TODO: Make non-busy.
+  vga_setcolor(VGA_GREEN, VGA_BLACK);
+  vga_puts("IDT and interrupt handling successfully initialized.\n\n");
+
+  vga_setcolor(VGA_LIGHT_GREY, VGA_BLACK);
+  char buf[128];
+
+  vga_setcolor(VGA_RED, VGA_BLACK);
+  vga_puts("Uptime: ");
+  for (;;) {
+    char output_s_buf[128];
+    char output_t_buf[128];
+
+    char *output_s = itoa(pit_get_secs(), output_s_buf, 10);
+    char *output_t = itoa(pit_get_ticks(), output_t_buf, 10);
+
+    vga_printf("%s s (%s ticks @ %d Hz).", output_s, output_t, PIT_FREQUENCY);
+    vga_setpos_rel(0, -18 - strlen(output_s) - strlen(output_t) -
+                          strlen(itoa(PIT_FREQUENCY, buf, 10)));
+
+    sleep_ms(1000);
   }
 }
