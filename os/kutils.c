@@ -34,6 +34,46 @@ int memcmp(const void *a, const void *b, size_t n) {
   return 0;
 }
 
+extern uint8_t _kernel_end;
+static uint8_t heap_initialized = 0;
+static intptr_t heap_start = 0;
+static intptr_t heap_end = 0;
+static intptr_t heap_top = 0;
+
+void init_heap() {
+  if (heap_initialized) {
+    panic("Heap already initialized.");
+    return;
+  }
+
+  heap_start = ((uintptr_t)&_kernel_end + 15) & ~((uintptr_t)15);
+  heap_end = 0x80000;
+  if (heap_start >= heap_end) {
+    panic("Heap size is zero or negative.");
+    return;
+  }
+  heap_top = heap_start;
+  heap_initialized = 1;
+}
+
+void *malloc(size_t size) {
+  if (heap_initialized == 0) {
+    panic("Heap uninitialized.");
+    return NULL;
+  }
+
+  intptr_t new_top = heap_top + size;
+  if (new_top > heap_end) {
+    panic("Allocation failure. Out of heap memory.");
+    return NULL;
+  }
+
+  intptr_t start = heap_top;
+  heap_top = new_top;
+
+  return (void *)start;
+}
+
 //////////////////////////////
 ////    Generic utils
 //////////////////////////////
@@ -91,7 +131,15 @@ void reverse(char *s) {
   }
 }
 
-void panic(const char *msg) { vga_puts(msg); }
+void panic(const char *msg) {
+  vga_setcolor(VGA_RED, VGA_WHITE);
+  vga_printf("PANIC: %s", msg);
+
+  for (;;) {
+    cli();
+    hlt();
+  }
+}
 
 //////////////////////////////
 ////    Time utils

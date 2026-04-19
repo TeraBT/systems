@@ -27,13 +27,15 @@ void kmain(void) {
   vga_puts("IDT and interrupt handling successfully initialized.\n\n");
 
   vga_setcolor(VGA_LIGHT_GREY, VGA_BLACK);
-  char buf[128];
+
+  // init_heap();
+  char *buf = malloc(128 * sizeof(char));
 
   vga_setcolor(VGA_RED, VGA_BLACK);
   vga_puts("Uptime: ");
   for (;;) {
-    char output_s_buf[128];
-    char output_t_buf[128];
+    char *output_s_buf = malloc(128 * sizeof(char));
+    char *output_t_buf = malloc(128 * sizeof(char));
 
     char *output_s = itoa(pit_get_secs(), output_s_buf, 10);
     char *output_t = itoa(pit_get_ticks(), output_t_buf, 10);

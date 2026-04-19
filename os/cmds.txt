@@ -10,3 +10,10 @@ For CHS in stage2.asm:
 qemu-system-i386 -drive if=floppy,format=raw,file=os.img
 
 stat -c%s kernel.bin
+
+nm kernel.elf | grep _kernel_end
+objdump -t kernel.elf | grep _kernel_end
+objdump -d -Mintel kernel.elf
+hexdump -C kernel.bin
+ndisasm -b 32 kernel.bin
+

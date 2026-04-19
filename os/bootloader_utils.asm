@@ -2,8 +2,8 @@ print_bios:
     mov bx, 0
 .loop:
     lodsb
-    cmp al, 0
-    je .done
+    test al, al
+    jz .done
     call .print_char
     jmp .loop
 .done:
@@ -25,7 +25,7 @@ enable_a20:
 ; ------------------------------
 
 print_hex_byte:
-    ; input: AL = byte to print
+    ; input: al = byte to print
     push ax
     push bx
 
@@ -64,3 +64,36 @@ nibble_to_ascii:
     ret
 
 hex_buffer db '00', 13, 10, 0
+
+; ------------------------------
+;       Sleep utils
+; ------------------------------
+
+tick_count: dw 0 
+
+register_timer_interrupt_handler:
+    cli
+    mov word [0x20], timer_interrupt_handler
+    mov word [0x22], cs
+    sti
+    ret
+
+timer_interrupt_handler:
+    push ax
+    inc dword [tick_count]
+    mov al, 0x20
+    out 0x20, al ; write EOI to master PIC
+    pop ax
+    iret
+
+sleep:
+    ; input: ax = time to sleep 
+    add ax, [tick_count]
+.wait:
+    cmp [tick_count], ax
+    jae .done
+    sti
+    hlt
+    jmp .wait
+.done:
+    ret

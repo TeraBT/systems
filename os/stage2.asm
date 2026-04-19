@@ -17,6 +17,12 @@ start2:
 
     call load_kernel_into_mem
    
+    call register_timer_interrupt_handler
+    mov ax, 16
+    sti
+    call sleep
+    cli
+
     call enable_a20
  
     lgdt [gdt_descriptor]
